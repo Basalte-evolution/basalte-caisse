@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Basalte Caisse</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<style>
+:root{--bg:#0b1018;--panel:#121a27;--card:#182234;--card2:#1d2a3f;--border:#263349;--text:#e8eef7;--text2:#8696a8;--accent:#5dd9d3;--accent-ink:#06222a;
+--ok:#6ddc82;--okbg:rgba(109,220,130,.12);--bad:#ff8f8f;--badbg:rgba(255,143,143,.12);--warn:#f5b85c;--warnbg:rgba(245,184,92,.12);
+--safe-top:env(safe-area-inset-top);--safe-bot:env(safe-area-inset-bottom)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg)}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--text);font-size:16px;padding-bottom:calc(76px + var(--safe-bot))}
+header{position:sticky;top:0;z-index:5;background:var(--panel);border-bottom:1px solid var(--border);padding:calc(10px + var(--safe-top)) 16px 10px;display:flex;align-items:center;gap:10px}
+header .t{font-weight:700;font-size:17px}
+header .t span{color:var(--accent)}
+header .s{font-size:12px;color:var(--text2)}
+header button{background:var(--card);color:var(--text2);border:1px solid var(--border);border-radius:10px;padding:7px 11px;font-size:13px;font-family:inherit}
+main{max-width:720px;margin:0 auto;padding:14px 16px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:14px}
+h2{font-size:18px;margin:2px 0 12px}
+h3{font-size:11px;margin:16px 0 8px;color:var(--text2);text-transform:uppercase;letter-spacing:.08em}
+label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text2);margin:12px 0 6px}
+input,select,textarea{width:100%;font-size:16px;padding:12px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-family:inherit;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+input[type=date],input[type=month]{color-scheme:dark}
+textarea{min-height:80px;resize:vertical}
+.btn{display:block;width:100%;border:0;border-radius:12px;padding:14px;font-size:16px;font-weight:700;background:var(--accent);color:var(--accent-ink);margin-top:14px;font-family:inherit;cursor:pointer}
+.btn.sec{background:var(--card);color:var(--text);border:1px solid var(--border)}
+.btn.red{background:var(--bad);color:#2a0606}
+.btn.sm{display:inline-block;width:auto;padding:8px 12px;font-size:14px;margin:0}
+.btn:disabled{opacity:.4}
+.row{display:flex;gap:10px;align-items:center}
+.row>*{flex:1}
+.grid{width:100%;border-collapse:collapse}
+.grid td,.grid th{padding:6px 4px;border-bottom:1px solid var(--border);text-align:right;font-size:15px}
+.grid th{font-size:11px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.grid td:first-child,.grid th:first-child{text-align:left}
+.grid input{width:64px;text-align:center;padding:9px 4px}
+.stp{display:inline-flex;align-items:center;gap:4px}
+.stp button{width:34px;height:40px;border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:8px;font-size:18px}
+.tot{display:flex;justify-content:space-between;font-weight:700;font-size:18px;padding-top:12px}
+.tot span:last-child{color:var(--accent)}
+.alert{border-radius:12px;padding:14px;margin:10px 0;font-weight:600;border:1px solid transparent}
+.alert.ok{background:var(--okbg);color:var(--ok);border-color:rgba(109,220,130,.3)}
+.alert.bad{background:var(--badbg);color:var(--bad);border-color:rgba(255,143,143,.3)}
+.alert.warn{background:var(--warnbg);color:var(--warn);border-color:rgba(245,184,92,.3)}
+.alert small{display:block;font-weight:400;margin-top:4px;opacity:.9}
+.mute{color:var(--text2);font-size:13px}
+.big{font-size:24px;font-weight:700}
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;background:var(--card2);color:var(--text2);margin:4px 4px 0 0}
+.pill.bad{background:var(--badbg);color:var(--bad)}.pill.ok{background:var(--okbg);color:var(--ok)}.pill.warn{background:var(--warnbg);color:var(--warn)}.pill.acc{background:rgba(93,217,211,.12);color:var(--accent)}
+nav{position:fixed;bottom:0;left:0;right:0;background:var(--panel);border-top:1px solid var(--border);display:flex;padding-bottom:var(--safe-bot);z-index:5}
+nav button{flex:1;border:0;background:none;padding:10px 2px 10px;font-size:10px;font-weight:600;color:var(--text2);font-family:inherit}
+nav button b{display:block;font-size:20px;margin-bottom:2px;filter:grayscale(1);opacity:.6}
+nav button.on{color:var(--accent)}
+nav button.on b{filter:none;opacity:1}
+.pin{display:flex;justify-content:center;gap:14px;margin:20px 0}
+.pin span{width:14px;height:14px;border-radius:50%;border:2px solid var(--accent)}
+.pin span.f{background:var(--accent)}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:300px;margin:0 auto}
+.pad button{font-size:24px;padding:16px;border-radius:14px;border:1px solid var(--border);background:var(--card);color:var(--text);font-family:inherit}
+.sites,.seg{display:flex;gap:8px;margin-bottom:6px}
+.sites button,.seg button{flex:1;padding:11px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--text);font-weight:700;font-size:15px;font-family:inherit}
+.sites button.on,.seg button.on{border-color:var(--accent);background:rgba(93,217,211,.12);color:var(--accent)}
+.item{border-bottom:1px solid var(--border);padding:12px 0}
+.item:last-child{border-bottom:0}
+.item .h{display:flex;justify-content:space-between;gap:8px;font-weight:600}
+.item.annule{opacity:.4}
+.item .d{display:none;font-size:14px;margin-top:8px;color:var(--text2);line-height:1.5}
+.item.open .d{display:block}
+.chk{display:flex;align-items:center;gap:10px;margin:8px 0;font-size:15px}
+.chk input{width:20px;height:20px;accent-color:var(--accent)}
+.kpi{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kpi>div{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px}
+.sub{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(90px + var(--safe-bot));background:var(--card2);border:1px solid var(--border);color:var(--text);padding:10px 16px;border-radius:12px;z-index:50;font-size:14px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:30;display:flex;align-items:flex-end;justify-content:center}
+.modal .card{width:100%;max-width:520px;margin:0;border-radius:18px 18px 0 0;padding-bottom:calc(16px + var(--safe-bot));max-height:90vh;overflow:auto}
+img.photo{max-width:100%;border-radius:8px;margin-top:6px}
+.steps{display:flex;gap:4px}
+.st{flex:1;text-align:center;font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.04em}
+.st b{display:flex;align-items:center;justify-content:center;width:30px;height:30px;margin:0 auto 4px;border-radius:50%;border:2px solid var(--border);background:var(--card);font-size:13px;color:var(--text2)}
+.st.done b{background:var(--okbg);border-color:var(--ok);color:var(--ok)}
+.st.done{color:var(--ok);cursor:pointer}
+.st.cur b{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.st.cur{color:var(--accent)}
+.todo>div{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px}
+.todo>div:last-child{border-bottom:0}
+.todo b{flex:0 0 26px;height:26px;border-radius:50%;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--accent)}
+.cols{display:grid;grid-template-columns:1fr;gap:0 24px}
+.cols3{display:grid;grid-template-columns:1fr;gap:0 14px}
+@media (min-width:760px){
+  body{font-size:17px;padding-bottom:0}
+  main{max-width:1180px;width:100%;padding:20px 28px;order:2}
+  header{padding:calc(12px + var(--safe-top)) 28px 12px}
+  #app{display:flex;flex-direction:column;min-height:100vh}
+  header{position:static;order:0}
+  nav{order:1;position:sticky;top:0;bottom:auto;padding-top:calc(6px + var(--safe-top)) !important;border-top:0;border-bottom:1px solid var(--border);justify-content:flex-start;gap:4px;padding:6px 22px;z-index:4}
+  nav button{flex:0 0 auto;display:flex;align-items:center;gap:8px;font-size:15px;padding:10px 16px;border-radius:10px}
+  nav button b{display:inline;font-size:18px;margin:0}
+  nav button.on{background:rgba(93,217,211,.12)}
+  .cols{grid-template-columns:1fr 1fr}
+  .cols.top{align-items:start}
+  .cols3{grid-template-columns:repeat(3,1fr)}
+  .kpi{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+  .grid td,.grid th{padding:8px 6px}
+  .grid input{width:76px;font-size:18px}
+  .stp button{width:44px;height:46px;font-size:20px}
+  .btn{max-width:520px}
+  .card .btn + .btn.sec{margin-top:10px}
+  .modal{align-items:center}
+  .modal .card{border-radius:18px;max-width:560px}
+  .toast{bottom:30px}
+  .login-wrap{max-width:460px;margin:0 auto}
+  .steps .st{font-size:12px}
+  .st b{width:38px;height:38px;font-size:15px}
+}
+.guide ol{margin:6px 0 0;padding-left:0;list-style:none;counter-reset:g}
+.guide li{counter-increment:g;display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:15px;line-height:1.4}
+.guide li:last-child{border-bottom:0}
+.guide li::before{content:counter(g);flex:0 0 26px;height:26px;border-radius:50%;background:rgba(93,217,211,.12);color:var(--accent);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
+/* Grilles de comptage : colonnes fixes, la colonne Nombre ne bouge plus */
+.grid.cnt{table-layout:fixed}
+.grid.cnt th:nth-child(1),.grid.cnt td:nth-child(1){width:72px;text-align:left}
+.grid.cnt th:nth-child(2),.grid.cnt td:nth-child(2){width:180px;text-align:left}
+.grid.cnt th:nth-child(3),.grid.cnt td:nth-child(3){text-align:right;white-space:nowrap}
+input[type=number]{-moz-appearance:textfield;appearance:textfield}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+@media (min-width:760px){.grid.cnt th:nth-child(1),.grid.cnt td:nth-child(1){width:84px}.grid.cnt th:nth-child(2),.grid.cnt td:nth-child(2){width:200px}}
+.grid.fondt td:nth-child(2),.grid.fondt th:nth-child(2){text-align:left;color:var(--text2)}
+.grid.fondt td:nth-child(3){font-weight:700}
+#cmp_details .cols{grid-template-columns:1fr !important}
+#cmp_details summary{padding:4px 0}
+.brand{font-size:11px;font-weight:700;letter-spacing:4px;color:var(--accent);text-transform:uppercase;text-align:center}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ============================================================
+   CONFIGURATION
+   Colle ici la config Firebase (Realtime Database) pour partager
+   les données entre les 3 salles. Si null : mode local (test),
+   les données restent dans ce navigateur uniquement.
+   ============================================================ */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCMkDFABqgPIJVrkTxLpcbnxSuz2gezPK8",
+  authDomain: "caisse-basalte.firebaseapp.com",
+  databaseURL: "https://caisse-basalte-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "caisse-basalte",
+  storageBucket: "caisse-basalte.firebasestorage.app",
+  messagingSenderId: "706195912858",
+  appId: "1:706195912858:web:4b0de5f905004bf32e8723"
+};
+/* Exemple :
+const FIREBASE_CONFIG = {
+  apiKey: "...",
+  authDomain: "....firebaseapp.com",
+  databaseURL: "https://....firebasedatabase.app",
+  projectId: "...",
+  appId: "..."
+};
+*/
+const ROOT = "caisse_coffre";
+const SITES = ["BE1", "BE2", "BE3"];
+const SITE_NOMS = { BE1: "Saint-Pierre", BE2: "Sainte-Clotilde", BE3: "Cambaie" };
+const BILLETS = [50000, 20000, 10000, 5000, 2000, 1000, 500];
+const PIECES = [200, 100, 50, 20, 10, 5, 2, 1];
+const DENOMS = BILLETS.concat(PIECES);
+const TYPES = { depot: "Clôture / dépôt", sortie: "Sortie facture", levee: "Levée", ajustement: "Ajustement" };
+
+/* ---------------- Utilitaires ---------------- */
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]));
+const eur = (c) => ((c || 0) / 100).toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
+const dLabel = (c) => c >= 500 ? (c / 100) + " €" : (c >= 100 ? (c / 100) + " €" : (c / 100).toFixed(2).replace(".", ",") + " €");
+const parseEur = (s) => { const n = parseFloat(String(s || "").replace(/\s/g, "").replace(",", ".")); return isNaN(n) ? 0 : Math.round(n * 100); };
+const today = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
+const frDate = (s) => s ? s.split("-").reverse().join("/") : "";
+const frTs = (t) => new Date(t).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const sumCompo = (c) => DENOMS.reduce((a, d) => a + d * (parseInt((c || {})[d]) || 0), 0);
+function toast(msg) { const t = document.createElement("div"); t.className = "toast"; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2600); }
+
+/* ---------------- Données ---------------- */
+/* Fond de caisse actuel (250 €) : 5×20 € · 8×10 € · 5×5 € · 10×2 € · 15×1 € · 12×0,50 € · 15×0,20 € · 10×0,10 € */
+const FOND_DEFAUT = { 2000: 5, 1000: 8, 500: 5, 200: 10, 100: 15, 50: 12, 20: 15, 10: 10 };
+/* Démarche pour lire le résultat de la journée dans DECIPLUS (modifiable dans Réglages) */
+const DECIPLUS_GUIDE_DEFAUT = "Sur l'ordinateur, ouvre DECIPLUS\nClique sur « MANAGER »\nPointe la souris sur « Historique » et clique sur « Encaissement »\nVérifie que la date affichée est bien celle d'aujourd'hui\nRelève les totaux Espèces, Carte bancaire et Chèque et recopie-les ci-dessous";
+/* Démarche pour relever le montant CB, par modèle de TPE (modifiable dans Réglages) */
+const TPE_MODELES_DEFAUT = {
+  sunmi: { nom: "Sunmi P2 SE (Nepting)", etapes: "Ouvre le menu (icône ≡)\nClique sur « Tickets »\nDans la section « Récapitulatifs », clique sur « Commerçant »\nGlisse vers le bas et relève le montant en €" },
+  ingenico: { nom: "Ingenico", etapes: "Clique sur le bouton menu (point noir dans un cercle noir)\nClique sur « Mes totaux »\nRelève le montant du jour en €" }
+};
+function defaults() {
+  return {
+    config: {
+      tolerance: 200,
+      poles: ["Bar", "Restaurant", "Escalade", "Ouverture", "Bricolage"],
+      fonds: {
+        BE1: { f0: { debut: "2026-01-01", compo: FOND_DEFAUT } },
+        BE2: { f0: { debut: "2026-01-01", compo: FOND_DEFAUT } },
+        BE3: { f0: { debut: "2026-01-01", compo: FOND_DEFAUT } }
+      },
+      tpe: { BE1: { t0: { nom: "TPE Sunmi", modele: "sunmi" }, t1: { nom: "TPE Ingenico", modele: "ingenico" } }, BE2: { t0: { nom: "TPE Sunmi", modele: "sunmi" }, t1: { nom: "TPE Ingenico", modele: "ingenico" } }, BE3: { t0: { nom: "TPE Sunmi", modele: "sunmi" }, t1: { nom: "TPE Ingenico", modele: "ingenico" } } },
+      codesSalle: { BE1: "0971", BE2: "0972", BE3: "0973" },
+      tpeModeles: TPE_MODELES_DEFAUT,
+      deciplusGuide: DECIPLUS_GUIDE_DEFAUT,
+      users: { admin: { prenom: "Admin", nom: "", pin: "0000", role: "admin" } }
+    },
+    mouvements: {}
+  };
+}
+function normalize(raw) {
+  const d = defaults();
+  if (!raw) return d;
+  const c = raw.config || {};
+  return {
+    config: {
+      tolerance: c.tolerance == null ? d.config.tolerance : c.tolerance,
+      poles: Array.isArray(c.poles) ? c.poles.filter(Boolean) : (c.poles ? Object.values(c.poles) : []),
+      fonds: c.fonds || d.config.fonds,
+      tpe: c.tpe || {},
+      codesSalle: c.codesSalle || d.config.codesSalle,
+      tpeModeles: Object.assign({}, d.config.tpeModeles, c.tpeModeles || {}),
+      deciplusGuide: c.deciplusGuide || d.config.deciplusGuide,
+      users: c.users || d.config.users
+    },
+    mouvements: raw.mouvements || {}
+  };
+}
+let RAW = null, S = defaults();
+const Store = {
+  mode: "local",
+  init(cb) {
+    if (FIREBASE_CONFIG && window.firebase) {
+      firebase.initializeApp(FIREBASE_CONFIG);
+      this.db = firebase.database();
+      this.mode = "firebase";
+      let first = true;
+      $("app").innerHTML = `<main style="padding-top:80px"><p class="mute" style="text-align:center">Connexion…</p></main>`;
+      /* Connexion anonyme : permet des règles Firebase « auth != null » */
+      firebase.auth().signInAnonymously().catch((e) => { $("app").innerHTML = `<main style="padding-top:80px"><div class="alert bad">Connexion Firebase impossible : ${esc(e.message)}<small>Vérifie que la connexion « Anonyme » est activée dans Firebase → Authentication.</small></div></main>`; });
+      firebase.auth().onAuthStateChanged((user) => { if (!user || this.listening) return; this.listening = true;
+      this.db.ref(ROOT).on("value", (snap) => {
+        const val = snap.val();
+        /* Première mise en service : on écrit la configuration par défaut complète */
+        if (!val || !val.config) { this.db.ref(ROOT + "/config").set(defaults().config); return; }
+        S = normalize(val);
+        /* ne pas effacer un formulaire en cours de saisie quand une autre salle enregistre */
+        const enSaisie = session.site && (["sortie", "levee", "reglages"].includes(view) || (view === "cloture" && wiz));
+        if (first || !enSaisie) cb();
+        first = false;
+      }, (err) => { $("app").innerHTML = `<main style="padding-top:80px"><div class="alert bad">Accès à la base refusé : ${esc(err.message)}<small>Vérifie les règles de sécurité Firebase.</small></div></main>`; });
+      });
+    } else {
+      try { RAW = JSON.parse(localStorage.getItem(ROOT) || "null"); } catch (e) { RAW = null; }
+      if (!RAW) RAW = defaults();
+      S = normalize(RAW); cb();
+    }
+  },
+  set(path, val) {
+    if (this.mode === "firebase") return this.db.ref(ROOT + "/" + path).set(val).then(() => render()).catch((e) => { toast("Erreur d'enregistrement : " + e.message); throw e; });
+    const parts = path.split("/"); let o = RAW;
+    for (let i = 0; i < parts.length - 1; i++) { if (!o[parts[i]] || typeof o[parts[i]] !== "object") o[parts[i]] = {}; o = o[parts[i]]; }
+    if (val === null) delete o[parts[parts.length - 1]]; else o[parts[parts.length - 1]] = JSON.parse(JSON.stringify(val));
+    try { localStorage.setItem(ROOT, JSON.stringify(RAW)); } catch (e) { toast("Stockage local plein"); }
+    S = normalize(RAW); render();
+    return Promise.resolve();
+  }
+};
+
+/* ---------------- Logique métier ---------------- */
+function getFond(site, date) {
+  const list = Object.values(S.config.fonds[site] || {}).filter((f) => f.debut <= date).sort((a, b) => a.debut < b.debut ? 1 : -1);
+  const f = list[0] || { debut: "", compo: {} };
+  return { debut: f.debut, compo: f.compo || {}, montant: sumCompo(f.compo) };
+}
+function mvts(filter) {
+  return Object.entries(S.mouvements).map(([id, m]) => Object.assign({ id }, m)).filter(filter || (() => true)).sort((a, b) => b.ts - a.ts);
+}
+function solde(site) {
+  let esp = 0, chq = 0;
+  mvts((m) => m.site === site && !m.annule).forEach((m) => {
+    if (m.type === "depot") { esp += (m.depotEsp || 0) - (m.complementEsp || 0); chq += m.totalChq || 0; }
+    if (m.type === "sortie") esp -= m.montant || 0;
+    if (m.type === "levee") { esp += (m.ecartEsp || 0) - (m.leveEsp || 0); chq += (m.ecartChq || 0) - (m.leveChq || 0); }
+    if (m.type === "ajustement") { esp += m.deltaEsp || 0; chq += m.deltaChq || 0; }
+  });
+  return { esp, chq };
+}
+/* Propose ce qu'on laisse en caisse pour reconstituer le fond */
+function proposeLaisse(compte, fond) {
+  const laisse = {};
+  let total = 0;
+  DENOMS.forEach((d) => { const k = Math.min(compte[d] || 0, parseInt(fond.compo[d]) || 0); laisse[d] = k; total += k * d; });
+  let manque = fond.montant - total;
+  if (manque > 0) {
+    DENOMS.forEach((d) => { if (manque <= 0) return; const dispo = (compte[d] || 0) - laisse[d]; const n = Math.min(dispo, Math.floor(manque / d)); if (n > 0) { laisse[d] += n; manque -= n * d; } });
+  }
+  return laisse;
+}
+
+/* ---------------- Session ---------------- */
+/* Session : la salle s'ouvre avec son code ; un responsable s'identifie en plus avec son code perso */
+let session = { uid: null, site: null, viaSalle: false };
+try { const x = JSON.parse(localStorage.getItem(ROOT + "_session") || "null"); if (x && x.site) { session.site = x.site; session.viaSalle = true; } } catch (e) {}
+function saveSession() { try { if (session.viaSalle) localStorage.setItem(ROOT + "_session", JSON.stringify({ site: session.site })); else localStorage.removeItem(ROOT + "_session"); } catch (e) {} }
+let view = "cloture", pinBuf = "", wiz = null, histF = { site: "", type: "", mois: today().slice(0, 7) }, respModal = false, editMvtId = null;
+const me = () => session.uid ? S.config.users[session.uid] : null;
+const meNom = () => { const u = me(); return u ? (u.prenom + " " + (u.nom || "")).trim() : ""; };
+const ROLES = { employe: "Employé (ancien)", responsable: "Responsable", admin: "Administrateur" };
+function roleOf(u) { if (!u) return null; if (u.role) return u.role; const p = u.perms || {}; return p.admin ? "admin" : (p.levee ? "responsable" : "employe"); }
+const isResp = () => ["responsable", "admin"].includes(roleOf(me()));
+const isAdmin = () => roleOf(me()) === "admin";
+function knownNames() {
+  const lim = Date.now() - 90 * 864e5, set = new Set();
+  mvts((m) => m.site === session.site && m.ts > lim && (m.type === "depot" || m.type === "sortie")).forEach((m) => { if (m.userNom) set.add(m.userNom); });
+  return [...set].sort();
+}
+const nameField = (id, val) => `<input id="${id}" list="${id}_dl" autocomplete="off" placeholder="Prénom Nom" value="${esc(val || "")}"><datalist id="${id}_dl">${knownNames().map((n) => `<option value="${esc(n)}">`).join("")}</datalist>`;
+const tpeList = (site) => Object.entries(S.config.tpe[site] || {}).map(([id, v]) => typeof v === "string" ? [id, v, ""] : [id, v.nom || "TPE", v.modele || ""]);
+const etapesModele = (mod) => String(((S.config.tpeModeles || {})[mod] || {}).etapes || "").split("\n").map((x) => x.trim()).filter(Boolean);
+let suiviTab = "coffres", tpeF = { site: "", mois: today().slice(0, 7) };
+
+/* ---------------- Rendu ---------------- */
+function render() {
+  const app = $("app");
+  if (session.uid && !me()) session.uid = null;
+  if (!session.site) { app.innerHTML = loginView(); return; }
+  const tabs = [["cloture", "🧮", "Clôture"]];
+  tabs.push(["sortie", "🧾", "Sortie"]);
+  if (isResp()) tabs.push(["levee", "💼", "Levée"]);
+  tabs.push(["histo", "📋", isResp() ? "Historique" : "Saisies"]);
+  if (isResp()) tabs.push(["tableau", "📊", "Suivi"]);
+  if (isResp()) tabs.push(["reglages", "⚙️", "Réglages"]);
+  if (!tabs.find((t) => t[0] === view)) view = tabs[0][0];
+  let body = "";
+  if (view === "cloture") body = clotureView();
+  if (view === "sortie") body = sortieView();
+  if (view === "levee") body = leveeView();
+  if (view === "histo") body = histoView();
+  if (view === "tableau") body = tableauView();
+  if (view === "reglages") body = reglagesView();
+  const local = Store.mode === "local" ? `<div class="alert warn">Mode test local : les données restent sur cet appareil. Renseigne FIREBASE_CONFIG pour partager entre les salles.</div>` : "";
+  const headR = isResp()
+    ? `<select style="width:auto;padding:8px 10px" onchange="session.site=this.value;wiz=null;try{localStorage.setItem(ROOT+'_lastsite',this.value)}catch(e){};render()">${SITES.map((x) => `<option ${x === session.site ? "selected" : ""}>${x}</option>`).join("")}</select><button onclick="finResp()">Fin mode responsable</button>`
+    : `<button onclick="respModal=true;render()">🔒 Responsable</button><button onclick="quitterSalle()">Quitter</button>`;
+  app.innerHTML = `<header><div><div class="t">Caisse <span>${esc(session.site)}</span> · ${esc(SITE_NOMS[session.site])}</div><div class="s">${isResp() ? esc(meNom()) + " · " + ROLES[roleOf(me())] : "Mode salle"}</div></div><span style="flex:1"></span>${headR}</header>
+  <main>${local}${body}</main>
+  <nav>${tabs.map((t) => `<button class="${view === t[0] ? "on" : ""}" onclick="go('${t[0]}')"><b>${t[1]}</b>${t[2]}</button>`).join("")}</nav>${respModal ? respModalView() : ""}${editMvtId ? editMvtView() : ""}`;
+  if (respModal) setTimeout(() => { const el = $("resp_pin"); if (el) el.focus(); }, 50);
+  if (view === "cloture") wizAfter();
+}
+function go(v) { view = v; window.scrollTo(0, 0); render(); }
+function finResp() { if (!session.viaSalle) { session.site = null; } session.uid = null; editMvtId = null; respModal = false; render(); }
+function quitterSalle() { if (!window.confirm("Fermer la caisse " + session.site + " sur cet appareil ? Il faudra retaper le code de la salle.")) return; session = { uid: null, site: null, viaSalle: false }; wiz = null; saveSession(); render(); }
+function logout() { finResp(); }
+function respModalView() {
+  return `<div class="modal" onclick="if(event.target===this){respModal=false;render()}"><div class="card"><h2>Mode responsable</h2><p class="mute">Code personnel (réglages, levées, suivi, modifications).</p>
+  <input id="resp_pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" onkeydown="if(event.key==='Enter')respLogin()">
+  <button class="btn" onclick="respLogin()">Valider</button><button class="btn sec" onclick="respModal=false;render()">Annuler</button></div></div>`;
+}
+function respLogin() {
+  const pin = $("resp_pin").value.trim();
+  const e = Object.entries(S.config.users).find(([, u]) => u.pin === pin && roleOf(u) !== "employe");
+  if (!e) { toast("Code inconnu"); $("resp_pin").value = ""; return; }
+  session.uid = e[0]; respModal = false; lastAct = Date.now(); render();
+  if (pin === "0000") toast("Pense à changer le code admin 0000 dans Réglages");
+}
+
+/* ---- Connexion ---- */
+function loginView() {
+  return `<main style="padding-top:calc(40px + var(--safe-top))"><div class="card login-wrap"><div class="brand">Basalte Évolution</div><h2 style="text-align:center;font-size:24px;margin:6px 0 4px">Caisse &amp; Coffres</h2>
+  <p class="mute" style="text-align:center">Tape le code de la salle</p>
+  <div class="pin">${[0, 1, 2, 3].map((i) => `<span class="${i < pinBuf.length ? "f" : ""}"></span>`).join("")}</div>
+  <div class="pad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => `<button onclick="pinKey('${n}')">${n}</button>`).join("")}<button onclick="pinKey('C')">⌫</button><button onclick="pinKey('0')">0</button><span></span></div>
+  <p class="mute" style="text-align:center;margin-top:14px">Responsable : tu peux aussi taper ton code personnel.</p></div></main>`;
+}
+function pinKey(k) {
+  if (k === "C") pinBuf = pinBuf.slice(0, -1); else if (pinBuf.length < 4) pinBuf += k;
+  if (pinBuf.length === 4) {
+    const code = pinBuf; pinBuf = "";
+    const site = SITES.find((x) => S.config.codesSalle[x] === code);
+    const u = Object.entries(S.config.users).find(([, x]) => x.pin === code && roleOf(x) !== "employe");
+    if (site) { session = { uid: null, site, viaSalle: true }; saveSession(); view = "cloture"; }
+    else if (u) { let last = null; try { last = localStorage.getItem(ROOT + "_lastsite"); } catch (e) {} session = { uid: u[0], site: SITES.includes(last) ? last : "BE1", viaSalle: false }; view = "tableau"; lastAct = Date.now(); if (code === "0000") toast("Pense à changer le code admin 0000 dans Réglages"); }
+    else toast("Code inconnu");
+  }
+  render();
+}
+
+/* ---- Grille de comptage ---- */
+function countGrid(prefix, values, cols) {
+  const rows = (list) => list.map((d) => `<tr><td>${dLabel(d)}</td><td><span class="stp"><button onclick="step('${prefix}',${d},-1)">−</button><input id="${prefix}_${d}" type="number" inputmode="numeric" min="0" value="${values[d] || ""}" oninput="gridInput('${prefix}')"><button onclick="step('${prefix}',${d},1)">+</button></span></td><td id="${prefix}_s_${d}">${eur((values[d] || 0) * d)}</td></tr>`).join("");
+  return `<div class="cols"><table class="grid cnt"><tr><th>Billets</th><th>Nombre</th><th>Total</th></tr>${rows(BILLETS)}</table><table class="grid cnt"><tr><th>Pièces</th><th>Nombre</th><th>Total</th></tr>${rows(PIECES)}</table></div><div class="tot"><span>Total</span><span id="${prefix}_tot">${eur(sumCompo(values))}</span></div>`;
+}
+function readGrid(prefix) { const o = {}; DENOMS.forEach((d) => { const el = $(prefix + "_" + d); const v = el ? parseInt(el.value) : 0; if (v > 0) o[d] = v; }); return o; }
+function step(prefix, d, n) { const el = $(prefix + "_" + d); el.value = Math.max(0, (parseInt(el.value) || 0) + n) || ""; gridInput(prefix); }
+function gridInput(prefix) {
+  const v = readGrid(prefix);
+  DENOMS.forEach((d) => { const s = $(prefix + "_s_" + d); if (s) s.textContent = eur((v[d] || 0) * d); });
+  const t = $(prefix + "_tot"); if (t) t.textContent = eur(sumCompo(v));
+  if (prefix === "cnt" && wiz) { wiz.compte = v; saveDraft(); }
+  if (prefix === "dep" && wiz) { wiz.depot = v; depotUpdate(); saveDraft(); }
+  if (prefix === "cmp" && wiz) { wiz.compl = v; depotUpdate(); saveDraft(); }
+  if (prefix === "fnd") { const t2 = $("fnd_tot"); if (t2) t2.textContent = eur(sumCompo(v)); }
+  if (prefix === "lev") { leveeUpdate(); }
+}
+
+/* ---- Clôture ---- */
+const ETAPES = ["Espèces", "TPE", "Chèques", "DECIPLUS", "Coffre"];
+const draftKey = () => ROOT + "_draft_" + session.site;
+function saveDraft() { try { if (wiz) localStorage.setItem(draftKey(), JSON.stringify(wiz)); else localStorage.removeItem(draftKey()); } catch (e) {} }
+function loadDraft() { try { const d = JSON.parse(localStorage.getItem(draftKey()) || "null"); return d && d.step ? d : null; } catch (e) { return null; } }
+function stepper() {
+  return `<div class="steps">${ETAPES.map((n, i) => {
+    const k = i + 1, done = wiz.done[k], cur = wiz.step === k;
+    const clic = !wiz.locked && done && !cur && k < 4;
+    return `<div class="st ${done ? "done" : ""} ${cur ? "cur" : ""}" ${clic ? `onclick="wizGo(${k})"` : ""}><b>${done && !cur ? "✓" : k}</b><span>${n}</span></div>`;
+  }).join("")}</div>`;
+}
+function wizGo(k) { if (wiz.locked || k >= 4) return; if (wiz.step === 1) wiz.compte = readGrid("cnt"); wiz.step = k; saveDraft(); render(); }
+function clotureView() {
+  if (!wiz) { const d = loadDraft(); if (d) wiz = d; }
+  const date = wiz ? wiz.date : today();
+  const fond = getFond(session.site, date);
+  if (!wiz) {
+    const deja = mvts((m) => m.type === "depot" && m.site === session.site && m.date === date && !m.annule);
+    const hier = new Date(Date.now() - 864e5); hier.setMinutes(hier.getMinutes() - hier.getTimezoneOffset());
+    const hierS = hier.toISOString().slice(0, 10);
+    const hierOk = mvts((m) => m.type === "depot" && m.site === session.site && m.date === hierS && !m.annule).length > 0;
+    return `<div class="card"><h2>Clôture de caisse</h2>
+    ${deja.length ? `<div class="alert ok">Clôture du jour déjà faite ✓<small>Par ${esc(deja[0].userNom)} à ${frTs(deja[0].ts).slice(-5)}</small></div>` : `<div class="alert warn">Clôture du jour pas encore faite</div>`}
+    ${!hierOk ? `<div class="alert bad">Aucune clôture enregistrée hier (${frDate(hierS)}) sur ${esc(session.site)}<small>Si la salle était ouverte, préviens un responsable.</small></div>` : ""}
+    <div class="row"><div><label>Ton prénom et nom</label>${nameField("cl_nom", isResp() ? meNom() : "")}</div><div><label>Date de la journée</label><input id="cl_date" type="date" value="${date}"></div></div>
+    <div class="kpi" style="margin-top:12px"><div><div class="mute">Fond de caisse à laisser</div><div class="big">${eur(fond.montant)}</div></div><div><div class="mute">TPE à clôturer</div><div class="big">${tpeList(session.site).length}</div></div></div>
+    <h3>Les 5 étapes, dans l'ordre</h3>
+    <div class="todo">${ETAPES.map((n, i) => `<div><b>${i + 1}</b>${["Compter toutes les espèces du tiroir (fond compris)", "Clôturer chaque TPE et noter le total du ticket", "Saisir chaque chèque (ou cocher « aucun chèque »)", "Recopier les montants DECIPLUS et voir les écarts", "Ranger l'argent, les chèques et les tickets au coffre"][i]}</div>`).join("")}</div>
+    <button class="btn" onclick="wizStart()">Commencer la clôture</button></div>`;
+  }
+  const head = `<div class="card">${stepper()}<p class="mute" style="margin:8px 0 0">Clôture du ${frDate(wiz.date)} · ${esc(session.site)} · commencée par ${esc(wiz.par || "")}</p></div>`;
+  const reste = ETAPES.filter((n, i) => !wiz.done[i + 1] && i + 1 !== wiz.step);
+  const rappel = reste.length && wiz.step < 5 ? `<p class="mute">Encore à faire après : ${reste.join(", ")}</p>` : "";
+  if (wiz.step === 1) {
+    return head + `<div class="card"><h2>1 · Espèces</h2><p class="mute">Compte tout ce qu'il y a dans le tiroir, fond de caisse compris.</p>${countGrid("cnt", wiz.compte)}
+    ${rappel}<button class="btn" onclick="nextEsp()">Valider les espèces → TPE</button><button class="btn sec" onclick="wizCancel()">Abandonner la clôture</button></div>`;
+  }
+  if (wiz.step === 2) {
+    const l = tpeList(session.site);
+    return head + `<div class="card"><h2>2 · Cartes bancaires (TPE)</h2><p class="mute">Pour chaque TPE, suis la démarche et relève le montant CB du jour. Tous les TPE doivent être faits avant de passer à DECIPLUS.</p>
+    <div class="cols top">${l.length ? l.map(([id, nom, mod]) => { const et = etapesModele(mod); const md = (S.config.tpeModeles || {})[mod]; return `<div class="sub guide"><div class="row"><b style="flex:1;font-size:17px">📟 ${esc(nom)}</b><span id="tpe_ok_${id}" class="pill ${wiz.tpe[id] != null ? "ok" : "warn"}">${wiz.tpe[id] != null ? "Fait ✓" : "À faire"}</span></div>${md ? `<div class="mute">${esc(md.nom)}</div>` : ""}
+      ${et.length ? `<ol>${et.map((e) => `<li>${esc(e)}</li>`).join("")}</ol>` : `<p class="mute">Démarche non renseignée pour ce TPE (Réglages).</p>`}
+      <label>Montant CB relevé sur ${esc(nom)}</label><input id="tpe_${id}" inputmode="decimal" placeholder="0,00" value="${wiz.tpe[id] != null ? (wiz.tpe[id] / 100).toFixed(2).replace(".", ",") : ""}" oninput="tpeSet('${id}',this.value)"></div>`; }).join("") : `<p class="mute">Aucun TPE configuré pour cette salle.</p>`}</div>
+    <div class="tot"><span>Total TPE</span><span id="tpe_tot">${eur(Object.values(wiz.tpe).reduce((a, b) => a + b, 0))}</span></div>
+    ${rappel}<button class="btn" onclick="nextTpe()">Valider les TPE → Chèques</button><button class="btn sec" onclick="wizGo(1)">Retour aux espèces</button></div>`;
+  }
+  if (wiz.step === 3) {
+    return head + `<div class="card"><h2>3 · Chèques</h2><div id="chqList">${chqRows()}</div>
+    <button class="btn sec" onclick="chqAdd()">+ Ajouter un chèque</button>
+    <div class="chk" style="margin-top:14px"><input type="checkbox" id="chq_aucun" ${wiz.aucunChq ? "checked" : ""} onchange="wiz.aucunChq=this.checked;saveDraft()"> Aucun chèque aujourd'hui</div>
+    <div class="tot"><span>Total chèques</span><span id="chq_tot">${eur(wiz.cheques.reduce((a, c) => a + c.montant, 0))}</span></div>
+    ${rappel}<button class="btn" onclick="nextChq()">Valider les chèques → DECIPLUS</button><button class="btn sec" onclick="wizGo(2)">Retour aux TPE</button></div>`;
+  }
+  if (wiz.step === 4) {
+    const etD = String(S.config.deciplusGuide || "").split("\n").map((x) => x.trim()).filter(Boolean);
+    return head + `<div class="cols top"><div class="card guide"><h2>💻 Trouver le résultat du jour dans DECIPLUS</h2><ol>${etD.map((e) => `<li>${esc(e)}</li>`).join("")}</ol></div>
+    <div class="card"><h2>4 · Montants DECIPLUS</h2>
+    <div class="alert warn">Après « Comparer », ton comptage sera verrouillé.<small>Espèces : ${eur(sumCompo(wiz.compte))} · TPE : ${eur(wiz.totalTpe)} · Chèques : ${eur(wiz.totalChq)}</small></div>
+    <label>Espèces encaissées du jour (hors fond de caisse)</label><input id="dec_esp" inputmode="decimal" placeholder="0,00">
+    <label>Carte bancaire encaissée du jour</label><input id="dec_cb" inputmode="decimal" placeholder="0,00">
+    <label>Chèques encaissés du jour</label><input id="dec_chq" inputmode="decimal" placeholder="0,00">
+    <button class="btn" onclick="nextDec()">Comparer</button><button class="btn sec" onclick="wizGo(3)">Retour aux chèques</button></div></div>`;
+  }
+  if (wiz.step === 5) {
+    const tol = S.config.tolerance || 0;
+    const needCom = [wiz.ecartEsp, wiz.ecartChq, wiz.ecartCb].some((e) => Math.abs(e) > tol);
+    const ck = wiz.ck || {};
+    return head + `<div class="cols top"><div class="card"><h2>Résultat</h2>${ecartBloc("Espèces", wiz.ecartEsp, tol)}${ecartBloc("Carte bancaire (TPE)", wiz.ecartCb, tol)}${ecartBloc("Chèques", wiz.ecartChq, tol)}
+    <p class="mute">Espèces attendues : fond ${eur(wiz.fond.montant)} + DECIPLUS ${eur(wiz.decEsp)} = ${eur(wiz.fond.montant + wiz.decEsp)} · comptées : ${eur(sumCompo(wiz.compte))}<br>TPE : ${eur(wiz.totalTpe)} · DECIPLUS CB : ${eur(wiz.decCb)}</p>
+    <label>Commentaire ${needCom ? "(obligatoire : écart au-delà de la tolérance)" : "(facultatif)"}</label><textarea id="cl_com" oninput="wiz.com=this.value;saveDraft()">${esc(wiz.com || "")}</textarea></div>
+    <div class="card"><h2>5 · Dépôt au coffre</h2><p class="mute">Le logiciel propose quoi mettre au coffre pour garder le fond (${eur(wiz.fond.montant)}) dans le tiroir. Corrige si tu as rangé autrement.</p>
+    ${depotGrid()}
+    <div id="dep_info"></div>
+    <h3>Fond de caisse à laisser dans le tiroir</h3><div id="fond_card"></div>
+    <details id="cmp_details" class="sub" ${sumCompo(wiz.compl || {}) ? "open" : ""}><summary style="cursor:pointer;font-weight:700">Compléter le fond avec la monnaie du coffre</summary>
+    <p class="mute">S'il manque de l'argent ou de la monnaie dans le tiroir, prends-la dans le coffre et indique ici ce que tu as pris. Le solde du coffre sera ajusté.</p>
+    ${countGrid("cmp", wiz.compl || {})}<div class="mute" id="cmp_info"></div></details>
+    <div class="kpi" style="margin-top:8px"><div><div class="mute">Espèces au coffre (net)</div><div class="big" id="dep_tot2">${eur(sumCompo(wiz.depot) - sumCompo(wiz.compl || {}))}</div></div><div><div class="mute">Chèques au coffre</div><div class="big">${eur(wiz.totalChq)}</div><div class="mute">${wiz.cheques.length} chèque(s)</div></div></div>
+    <h3>Je confirme avoir rangé au coffre</h3>
+    <div class="chk"><input type="checkbox" ${ck.esp ? "checked" : ""} onchange="wizCk('esp',this.checked)"> Les espèces</div>
+    <div class="chk"><input type="checkbox" ${ck.tpe ? "checked" : ""} onchange="wizCk('tpe',this.checked)"> Les ${tpeList(session.site).length} tickets TPE</div>
+    ${wiz.cheques.length ? `<div class="chk"><input type="checkbox" ${ck.chq ? "checked" : ""} onchange="wizCk('chq',this.checked)"> Les ${wiz.cheques.length} chèque(s)</div>` : ""}
+    <div class="chk"><input type="checkbox" ${ck.fond ? "checked" : ""} onchange="wizCk('fond',this.checked)"> Le fond de caisse est resté dans le tiroir</div>
+    <button class="btn" id="btnSave" onclick="wizSave()">Enregistrer la clôture</button></div></div>`;
+  }
+  return "";
+}
+function ecartBloc(lbl, e, tol) {
+  if (e === 0) return `<div class="alert ok">${lbl} : juste ✓</div>`;
+  const cls = Math.abs(e) > tol ? "bad" : "warn";
+  return `<div class="alert ${cls}">${lbl} : ${e > 0 ? "SURPLUS" : "DÉFICIT"} de ${eur(Math.abs(e))}<small>${Math.abs(e) > tol ? "Au-delà de la tolérance (" + eur(tol) + ")" : "Dans la tolérance"}</small></div>`;
+}
+function depotGrid() {
+  return `<table class="grid"><tr><th>Valeur</th><th>Compté</th><th>Au coffre</th><th>Reste</th></tr>${DENOMS.filter((d) => wiz.compte[d]).map((d) => `<tr><td>${dLabel(d)}</td><td>${wiz.compte[d]}</td><td><input id="dep_${d}" type="number" inputmode="numeric" min="0" max="${wiz.compte[d]}" value="${wiz.depot[d] || 0}" oninput="gridInput('dep')"></td><td id="dep_r_${d}">${wiz.compte[d] - (wiz.depot[d] || 0)}</td></tr>`).join("")}</table>`;
+}
+/* Compare ce qui reste dans le tiroir à la composition prévue du fond */
+function analyseFond(compte, depot, fond, compl) {
+  compl = compl || {};
+  const lignes = [], manque = {}, trop = {};
+  DENOMS.forEach((d) => {
+    const prevu = parseInt(fond.compo[d]) || 0, laisse = Math.max((compte[d] || 0) - (depot[d] || 0), 0) + (compl[d] || 0);
+    if (!prevu && !laisse) return;
+    lignes.push({ d, prevu, laisse });
+    if (laisse < prevu) manque[d] = prevu - laisse;
+    if (laisse > prevu) trop[d] = laisse - prevu;
+  });
+  return { lignes, manque, trop, totalLaisse: lignes.reduce((a, l) => a + l.laisse * l.d, 0) };
+}
+function fondCard() {
+  const a = analyseFond(wiz.compte, wiz.depot, wiz.fond, wiz.compl);
+  const rows = a.lignes.map((l) => {
+    const etat = l.laisse === l.prevu ? `<span class="pill ok">✓</span>` : l.laisse < l.prevu ? `<span class="pill warn">manque ${l.prevu - l.laisse}</span>` : `<span class="pill">+${l.laisse - l.prevu}</span>`;
+    return `<tr><td>${dLabel(l.d)}</td><td>${l.prevu ? l.prevu + " × " + dLabel(l.d) + " = " + eur(l.prevu * l.d) : "—"}</td><td>${l.laisse}</td><td>${etat}</td></tr>`;
+  }).join("");
+  const nbManque = Object.keys(a.manque).length;
+  const msg = a.totalLaisse !== wiz.fond.montant
+    ? `<div class="alert bad">Tiroir : ${eur(a.totalLaisse)} au lieu de ${eur(wiz.fond.montant)} — enregistrement bloqué<small>${a.totalLaisse > wiz.fond.montant ? "Mets " + eur(a.totalLaisse - wiz.fond.montant) + " de plus au coffre." : "Il manque " + eur(wiz.fond.montant - a.totalLaisse) + " : mets moins au coffre, ou prends la monnaie dans le coffre (ci-dessous)."}</small></div>`
+    : nbManque ? `<div class="alert warn">Montant juste (${eur(a.totalLaisse)}) mais il manque de la petite monnaie<small>Manque : ${DENOMS.filter((d) => a.manque[d]).map((d) => a.manque[d] + " × " + dLabel(d)).join(", ")}. Un responsable sera prévenu.</small></div>`
+    : `<div class="alert ok">Fond de caisse complet ✓ (${eur(a.totalLaisse)})</div>`;
+  return `<table class="grid fondt"><tr><th>Valeur</th><th>Prévu</th><th>Laissé</th><th></th></tr>${rows}</table>${msg}`;
+}
+function tiroirTotal() { return DENOMS.reduce((t, d) => t + (Math.max((wiz.compte[d] || 0) - (wiz.depot[d] || 0), 0) + ((wiz.compl || {})[d] || 0)) * d, 0); }
+function depotUpdate() {
+  const fc = $("fond_card"); if (fc) fc.innerHTML = fondCard();
+  let err = false;
+  DENOMS.forEach((d) => { if (!wiz.compte[d]) return; const r = wiz.compte[d] - (wiz.depot[d] || 0); if (r < 0) err = true; const el = $("dep_r_" + d); if (el) el.textContent = r; });
+  const t = $("dep_tot2"); if (t) t.textContent = eur(sumCompo(wiz.depot) - sumCompo(wiz.compl || {}));
+  const ct = $("cmp_info"); if (ct) ct.textContent = sumCompo(wiz.compl || {}) ? "Pris dans le coffre : " + eur(sumCompo(wiz.compl)) : "";
+  const reste = tiroirTotal();
+  const info = $("dep_info"); if (info) info.innerHTML = err ? `<div class="alert bad">Tu ne peux pas mettre au coffre plus que ce que tu as compté.</div>` : "";
+  const det = $("cmp_details"); if (det && reste < wiz.fond.montant && !det.open) det.open = true;
+  const btn = $("btnSave"); if (btn) { const ok = !err && reste === wiz.fond.montant; btn.disabled = !ok; btn.textContent = ok ? "Enregistrer la clôture" : "Le tiroir doit contenir exactement " + eur(wiz.fond.montant); }
+}
+function chqAdd() { wiz.cheques.push({ montant: 0, numero: "", emetteur: "" }); $("chqList").innerHTML = chqRows(); }
+function chqDel(i) { wiz.cheques.splice(i, 1); $("chqList").innerHTML = chqRows(); chqTot(); }
+function chqSet(i, k, v) { wiz.cheques[i][k] = k === "montant" ? parseEur(v) : v; chqTot(); saveDraft(); }
+function chqTot() { $("chq_tot").textContent = eur(wiz.cheques.reduce((a, c) => a + c.montant, 0)); }
+function wizAfter() { if (wiz && wiz.step === 5) depotUpdate(); }
+function wizCk(k, v) { wiz.ck = wiz.ck || {}; wiz.ck[k] = v; saveDraft(); }
+function wizStart() {
+  const date = $("cl_date").value || today(), nom = $("cl_nom").value.trim();
+  if (nom.length < 3) { toast("Écris ton prénom et ton nom"); $("cl_nom").focus(); return; }
+  wiz = { step: 1, date, par: nom, fond: getFond(session.site, date), compte: {}, cheques: [], tpe: {}, depot: {}, done: {}, ck: {} };
+  saveDraft(); render();
+}
+function wizCancel() { if (!window.confirm("Abandonner cette clôture ? Les saisies seront perdues.")) return; wiz = null; saveDraft(); render(); }
+function nextEsp() {
+  wiz.compte = readGrid("cnt");
+  if (sumCompo(wiz.compte) === 0 && !window.confirm("Aucune espèce comptée. Continuer ?")) return;
+  wiz.done[1] = true; wiz.step = 2; saveDraft(); render();
+}
+function chqRows() {
+  if (!wiz.cheques.length) return `<p class="mute">Aucun chèque saisi. Ajoute-les un par un.</p>`;
+  return wiz.cheques.map((c, i) => `<div class="sub"><div class="row"><div><label>Montant</label><input inputmode="decimal" value="${c.montant ? (c.montant / 100).toFixed(2).replace(".", ",") : ""}" oninput="chqSet(${i},'montant',this.value)"></div><div><label>N° chèque</label><input value="${esc(c.numero)}" oninput="chqSet(${i},'numero',this.value)"></div></div><label>Nom du client / émetteur</label><input value="${esc(c.emetteur)}" oninput="chqSet(${i},'emetteur',this.value)"><button class="btn sm sec" style="margin-top:8px" onclick="chqDel(${i})">Supprimer</button></div>`).join("");
+}
+function tpeSet(id, v) {
+  if (String(v).trim() === "") delete wiz.tpe[id]; else wiz.tpe[id] = parseEur(v);
+  $("tpe_tot").textContent = eur(Object.values(wiz.tpe).reduce((a, b) => a + b, 0));
+  const p = $("tpe_ok_" + id); if (p) { const ok = wiz.tpe[id] != null; p.className = "pill " + (ok ? "ok" : "warn"); p.textContent = ok ? "Fait ✓" : "À faire"; }
+  saveDraft();
+}
+function nextTpe() {
+  const l = tpeList(session.site);
+  const manque = l.filter(([id]) => wiz.tpe[id] == null).map(([, n]) => n);
+  if (manque.length) { toast("Pas encore fait : " + manque.join(", ") + " (0 si aucune vente)"); return; }
+  wiz.tpeDetail = l.map(([id, nom, mod]) => ({ nom, modele: mod, montant: wiz.tpe[id] || 0 }));
+  wiz.totalTpe = wiz.tpeDetail.reduce((a, t) => a + t.montant, 0);
+  wiz.done[2] = true; wiz.step = 3; saveDraft(); render();
+}
+function nextChq() {
+  wiz.cheques = wiz.cheques.filter((c) => c.montant > 0);
+  if (!wiz.cheques.length && !wiz.aucunChq) { toast("Saisis tes chèques ou coche « Aucun chèque »"); render(); return; }
+  if (wiz.cheques.length && wiz.aucunChq) { wiz.aucunChq = false; }
+  wiz.totalChq = wiz.cheques.reduce((a, c) => a + c.montant, 0);
+  wiz.done[3] = true; wiz.step = 4; saveDraft(); render();
+}
+function nextDec() {
+  if (["dec_esp", "dec_chq", "dec_cb"].some((id) => $(id).value.trim() === "")) { toast("Renseigne les trois montants (0 si rien)"); return; }
+  wiz.decEsp = parseEur($("dec_esp").value);
+  wiz.decChq = parseEur($("dec_chq").value);
+  wiz.decCb = parseEur($("dec_cb").value);
+  wiz.ecartEsp = sumCompo(wiz.compte) - (wiz.fond.montant + wiz.decEsp);
+  wiz.ecartChq = wiz.totalChq - wiz.decChq;
+  wiz.ecartCb = wiz.totalTpe - wiz.decCb;
+  const laisse = proposeLaisse(wiz.compte, wiz.fond);
+  wiz.depot = {}; DENOMS.forEach((d) => { const n = (wiz.compte[d] || 0) - (laisse[d] || 0); if (n > 0) wiz.depot[d] = n; });
+  wiz.locked = true; wiz.done[4] = true; wiz.step = 5; saveDraft(); render();
+}
+function wizSave() {
+  const tol = S.config.tolerance || 0;
+  const needCom = [wiz.ecartEsp, wiz.ecartChq, wiz.ecartCb].some((e) => Math.abs(e) > tol);
+  wiz.com = ($("cl_com").value || "").trim();
+  if (needCom && !wiz.com) { toast("Explique l'écart dans le commentaire"); $("cl_com").focus(); return; }
+  if (DENOMS.some((d) => (wiz.depot[d] || 0) > (wiz.compte[d] || 0))) { toast("Dépôt supérieur au comptage"); return; }
+  if (tiroirTotal() !== wiz.fond.montant) { toast("Le tiroir doit contenir exactement " + eur(wiz.fond.montant) + " (actuellement " + eur(tiroirTotal()) + ")"); return; }
+  const cpl = sumCompo(wiz.compl || {}), dispo = solde(session.site).esp + sumCompo(wiz.depot);
+  if (cpl > dispo && !window.confirm("Tu indiques avoir pris " + eur(cpl) + " dans le coffre, mais le coffre ne devrait contenir que " + eur(dispo) + ". Continuer quand même ?")) return;
+  const ck = wiz.ck || {};
+  const manque = [];
+  if (!ck.esp) manque.push("espèces"); if (!ck.tpe) manque.push("tickets TPE"); if (wiz.cheques.length && !ck.chq) manque.push("chèques"); if (!ck.fond) manque.push("fond de caisse");
+  if (manque.length) { toast("Coche ce que tu as rangé : " + manque.join(", ")); return; }
+  const depotEsp = sumCompo(wiz.depot);
+  const m = {
+    type: "depot", site: session.site, date: wiz.date, ts: Date.now(), uid: session.uid || null, userNom: wiz.par,
+    fond: wiz.fond.montant, compte: wiz.compte, totalCompte: sumCompo(wiz.compte), cheques: wiz.cheques, totalChq: wiz.totalChq,
+    decEsp: wiz.decEsp, decChq: wiz.decChq, ecartEsp: wiz.ecartEsp, ecartChq: wiz.ecartChq, commentaire: wiz.com,
+    tpe: wiz.tpeDetail, totalTpe: wiz.totalTpe, decCb: wiz.decCb, ecartCb: wiz.ecartCb,
+    depot: wiz.depot, depotEsp: depotEsp, resteCaisse: tiroirTotal(),
+    fondManque: analyseFond(wiz.compte, wiz.depot, wiz.fond, wiz.compl).manque,
+    complement: wiz.compl || {}, complementEsp: sumCompo(wiz.compl || {})
+  };
+  Store.set("mouvements/" + newId(), m).then(() => { wiz = null; saveDraft(); toast("Clôture enregistrée"); render(); });
+}
+
+/* ---- Sortie facture ---- */
+let photoData = "";
+function sortieView() {
+  const so = solde(session.site);
+  return `<div class="card"><h2>Sortie d'argent du coffre</h2>
+  <div class="kpi">${isResp() ? `<div><div class="mute">Coffre ${esc(session.site)} · espèces dispo</div><div class="big">${eur(so.esp)}</div></div>` : ""}</div>
+  <label>Ton prénom et nom</label>${nameField("so_nom", isResp() ? meNom() : "")}
+  <label>Type</label><select id="so_type" onchange="$('so_benef_w').style.display=this.value==='remboursement'?'block':'none'"><option value="fournisseur">Paiement fournisseur</option><option value="remboursement">Remboursement de facture (avance de frais)</option></select>
+  <div id="so_benef_w" style="display:none"><label>Personne remboursée (nom prénom)</label><input id="so_benef"></div>
+  <label>Fournisseur / objet</label><input id="so_four" placeholder="ex. Leroy Merlin, vis et tasseaux">
+  <div class="row"><div><label>N° de facture</label><input id="so_num"></div><div><label>Date de la facture</label><input id="so_dfac" type="date"></div></div>
+  <label>Date de sortie de l'argent</label><input id="so_date" type="date" value="${today()}">
+  <div class="row"><div><label>Site concerné</label><select id="so_site">${SITES.map((s) => `<option ${s === session.site ? "selected" : ""}>${s}</option>`).join("")}</select></div><div><label>Pôle</label><select id="so_pole"><option value="">—</option>${S.config.poles.map((p) => `<option>${esc(p)}</option>`).join("")}</select></div></div>
+  <label>Montant (espèces sorties du coffre ${esc(session.site)})</label><input id="so_mt" inputmode="decimal" placeholder="0,00">
+  <label>Photo de la facture</label><input id="so_photo" type="file" accept="image/*" capture="environment" onchange="loadPhoto(this)"><div id="so_prev"></div>
+  <button class="btn" onclick="sortieSave()">Enregistrer la sortie</button></div>`;
+}
+function loadPhoto(inp) {
+  const f = inp.files && inp.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => { const img = new Image(); img.onload = () => { const max = 1000, k = Math.min(1, max / Math.max(img.width, img.height)); const c = document.createElement("canvas"); c.width = img.width * k; c.height = img.height * k; c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); photoData = c.toDataURL("image/jpeg", 0.6); $("so_prev").innerHTML = `<img class="photo" src="${photoData}">`; }; img.src = r.result; };
+  r.readAsDataURL(f);
+}
+function sortieSave() {
+  const mt = parseEur($("so_mt").value), so = solde(session.site);
+  const t = $("so_type").value;
+  const req = [["so_nom", "ton nom"], ["so_four", "le fournisseur / objet"], ["so_num", "le n° de facture"], ["so_dfac", "la date de facture"], ["so_pole", "le pôle"]];
+  for (const [id, l] of req) if (!$(id).value.trim()) { toast("Renseigne " + l); return; }
+  if (t === "remboursement" && !$("so_benef").value.trim()) { toast("Renseigne la personne remboursée"); return; }
+  if (mt <= 0) { toast("Montant invalide"); return; }
+  if (mt > so.esp) { toast(isResp() ? "Montant supérieur aux espèces du coffre (" + eur(so.esp) + ")" : "Montant supérieur aux espèces disponibles dans le coffre : préviens un responsable"); return; }
+  if (mt > 100000 && !window.confirm("Paiement en espèces de plus de 1 000 € : vérifie que c'est autorisé. Continuer ?")) return;
+  const m = { type: "sortie", site: session.site, date: $("so_date").value || today(), ts: Date.now(), uid: session.uid || null, userNom: $("so_nom").value.trim(),
+    nature: t, beneficiaire: t === "remboursement" ? $("so_benef").value.trim() : "", fournisseur: $("so_four").value.trim(), numFacture: $("so_num").value.trim(),
+    dateFacture: $("so_dfac").value, siteConcerne: $("so_site").value, pole: $("so_pole").value, montant: mt, photo: photoData || "" };
+  Store.set("mouvements/" + newId(), m).then(() => { photoData = ""; toast("Sortie enregistrée"); render(); });
+}
+
+/* ---- Levée ---- */
+function leveeView() {
+  const so = solde(session.site);
+  return `<div class="card"><h2>Levée du coffre ${esc(session.site)}</h2>
+  <div class="kpi"><div><div class="mute">Espèces théoriques</div><div class="big">${eur(so.esp)}</div></div><div><div class="mute">Chèques théoriques</div><div class="big">${eur(so.chq)}</div></div></div>
+  <h3>1 · Compte ce qu'il y a dans le coffre</h3>${countGrid("lev", {})}
+  <label>Total des chèques trouvés dans le coffre</label><input id="lv_chq" inputmode="decimal" placeholder="0,00" oninput="leveeUpdate()">
+  <div id="lv_ecart"></div>
+  <h3>2 · Ce que tu emportes</h3>
+  <div class="row"><div><label>Espèces récupérées</label><input id="lv_esp_pris" inputmode="decimal" placeholder="0,00"></div><div><label>Chèques récupérés</label><input id="lv_chq_pris" inputmode="decimal" placeholder="0,00"></div></div>
+  <button class="btn sm sec" style="margin-top:8px" onclick="leveeTout()">Tout récupérer</button>
+  <label>Date</label><input id="lv_date" type="date" value="${today()}">
+  <label>Commentaire</label><textarea id="lv_com" placeholder="Obligatoire si écart"></textarea>
+  <button class="btn" onclick="leveeSave()">Enregistrer la levée</button></div>`;
+}
+function leveeUpdate() {
+  const box = $("lv_ecart"); if (!box) return;
+  const so = solde(session.site), esp = sumCompo(readGrid("lev")), chq = parseEur($("lv_chq").value);
+  const e1 = esp - so.esp, e2 = chq - so.chq;
+  box.innerHTML = ecartBloc("Coffre espèces (constaté " + eur(esp) + ")", e1, 0) + ecartBloc("Coffre chèques (constaté " + eur(chq) + ")", e2, 0);
+}
+function leveeTout() { $("lv_esp_pris").value = (sumCompo(readGrid("lev")) / 100).toFixed(2).replace(".", ","); $("lv_chq_pris").value = (parseEur($("lv_chq").value) / 100).toFixed(2).replace(".", ","); }
+function leveeSave() {
+  const so = solde(session.site), compo = readGrid("lev"), esp = sumCompo(compo), chq = parseEur($("lv_chq").value);
+  const pe = parseEur($("lv_esp_pris").value), pc = parseEur($("lv_chq_pris").value), com = $("lv_com").value.trim();
+  if (pe > esp || pc > chq) { toast("Tu ne peux pas récupérer plus que ce qui est constaté"); return; }
+  if ((esp !== so.esp || chq !== so.chq) && !com) { toast("Écart constaté : ajoute un commentaire"); return; }
+  if (pe === 0 && pc === 0 && !window.confirm("Rien de récupéré : enregistrer comme simple comptage du coffre ?")) return;
+  const m = { type: "levee", site: session.site, date: $("lv_date").value || today(), ts: Date.now(), uid: session.uid, userNom: meNom(),
+    compo, constateEsp: esp, constateChq: chq, theoEsp: so.esp, theoChq: so.chq, ecartEsp: esp - so.esp, ecartChq: chq - so.chq, leveEsp: pe, leveChq: pc, commentaire: com };
+  Store.set("mouvements/" + newId(), m).then(() => { toast("Levée enregistrée"); render(); });
+}
+
+/* ---- Modification des saisies (responsables) ---- */
+const EDITABLE = {
+  depot: [["date", "Date", "date"], ["userNom", "Saisi par", "txt"], ["totalCompte", "Espèces comptées (fond compris)", "eur"], ["decEsp", "DECIPLUS espèces", "eur"], ["depotEsp", "Espèces mises au coffre", "eur"], ["totalTpe", "Total TPE", "eur"], ["decCb", "DECIPLUS CB", "eur"], ["totalChq", "Chèques (mis au coffre)", "eur"], ["decChq", "DECIPLUS chèques", "eur"]],
+  sortie: [["date", "Date de sortie", "date"], ["userNom", "Saisi par", "txt"], ["montant", "Montant", "eur"], ["fournisseur", "Fournisseur / objet", "txt"], ["numFacture", "N° facture", "txt"], ["dateFacture", "Date facture", "date"], ["pole", "Pôle", "pole"], ["siteConcerne", "Site concerné", "site"]],
+  levee: [["date", "Date", "date"], ["constateEsp", "Espèces constatées", "eur"], ["constateChq", "Chèques constatés", "eur"], ["leveEsp", "Espèces récupérées", "eur"], ["leveChq", "Chèques récupérés", "eur"]],
+  ajustement: [["deltaEsp", "Espèces (+/−)", "eur"], ["deltaChq", "Chèques (+/−)", "eur"]]
+};
+const fieldDef = (t, k) => (EDITABLE[t] || []).find((f) => f[0] === k) || [k, k, "txt"];
+const fieldLabel = (t, k) => fieldDef(t, k)[1];
+const fmtField = (t, k, v) => fieldDef(t, k)[2] === "eur" ? eur(v) : (fieldDef(t, k)[2] === "date" ? frDate(v) : esc(v));
+function editMvtView() {
+  const m = S.mouvements[editMvtId]; if (!m) { editMvtId = null; return ""; }
+  const f = EDITABLE[m.type] || [];
+  const inp = ([k, l, t]) => {
+    const v = m[k];
+    let field = `<input id="em_${k}" value="${esc(v == null ? "" : v)}">`;
+    if (t === "eur") field = `<input id="em_${k}" inputmode="decimal" value="${((v || 0) / 100).toFixed(2).replace(".", ",")}">`;
+    if (t === "date") field = `<input id="em_${k}" type="date" value="${esc(v || "")}">`;
+    if (t === "pole") field = `<select id="em_${k}">${S.config.poles.concat(S.config.poles.includes(v) ? [] : [v]).map((p) => `<option ${p === v ? "selected" : ""}>${esc(p)}</option>`).join("")}</select>`;
+    if (t === "site") field = `<select id="em_${k}">${SITES.map((x) => `<option ${x === v ? "selected" : ""}>${x}</option>`).join("")}</select>`;
+    return `<div><label>${l}</label>${field}</div>`;
+  };
+  return `<div class="modal" onclick="if(event.target===this){editMvtId=null;render()}"><div class="card"><h2>Modifier · ${TYPES[m.type]} ${esc(m.site)}</h2>
+  <div class="cols">${f.map(inp).join("")}</div>
+  ${m.type === "depot" ? `<p class="mute">Les écarts seront recalculés. Le détail billet par billet d'origine reste visible dans l'historique.</p>` : ""}
+  <label>Motif de la modification (obligatoire)</label><input id="em_motif">
+  <button class="btn" onclick="saveEditMvt()">Enregistrer la modification</button><button class="btn sec" onclick="editMvtId=null;render()">Fermer</button></div></div>`;
+}
+function saveEditMvt() {
+  if (!isResp()) return;
+  const id = editMvtId, m = S.mouvements[id], motif = $("em_motif").value.trim();
+  if (!motif) { toast("Indique le motif de la modification"); return; }
+  const n = JSON.parse(JSON.stringify(m)), avant = {}, apres = {};
+  (EDITABLE[m.type] || []).forEach(([k, , t]) => {
+    const raw = $("em_" + k).value;
+    const v = t === "eur" ? parseEur(raw) : raw.trim();
+    if ((m[k] == null ? (t === "eur" ? 0 : "") : m[k]) !== v) { avant[k] = m[k] == null ? (t === "eur" ? 0 : "") : m[k]; apres[k] = v; n[k] = v; }
+  });
+  if (!Object.keys(avant).length) { toast("Aucun changement"); return; }
+  if (m.type === "depot") { n.ecartEsp = n.totalCompte - (n.fond + n.decEsp); n.ecartChq = n.totalChq - n.decChq; n.ecartCb = (n.totalTpe || 0) - (n.decCb || 0); n.resteCaisse = n.totalCompte - n.depotEsp; }
+  if (m.type === "levee") { n.ecartEsp = n.constateEsp - n.theoEsp; n.ecartChq = n.constateChq - n.theoChq; }
+  n.modifs = Object.assign({}, m.modifs || {}, { [newId()]: { par: meNom(), ts: Date.now(), motif, avant, apres } });
+  Store.set("mouvements/" + id, n).then(() => { editMvtId = null; toast("Modification enregistrée"); render(); });
+}
+
+/* ---- Historique ---- */
+function mvtLine(m) {
+  let titre = "", mt = "", pills = "", det = "";
+  if (m.type === "depot") {
+    titre = "Clôture du " + frDate(m.date); mt = ((m.depotEsp || 0) - (m.complementEsp || 0) >= 0 ? "+" : "") + eur((m.depotEsp || 0) - (m.complementEsp || 0)) + (m.totalChq ? " · chq " + eur(m.totalChq) : "");
+    if (m.ecartEsp) pills += `<span class="pill ${Math.abs(m.ecartEsp) > S.config.tolerance ? "bad" : "warn"}">Esp ${m.ecartEsp > 0 ? "+" : ""}${eur(m.ecartEsp)}</span>`;
+    if (m.ecartChq) pills += `<span class="pill bad">Chq ${m.ecartChq > 0 ? "+" : ""}${eur(m.ecartChq)}</span>`;
+    if (m.ecartCb) pills += `<span class="pill ${Math.abs(m.ecartCb) > S.config.tolerance ? "bad" : "warn"}">CB ${m.ecartCb > 0 ? "+" : ""}${eur(m.ecartCb)}</span>`;
+    if (!m.ecartEsp && !m.ecartChq && !m.ecartCb) pills += `<span class="pill ok">Juste</span>`;
+    det = `Fond : ${eur(m.fond)} · Compté : ${eur(m.totalCompte)} · DECIPLUS esp : ${eur(m.decEsp)} · chq : ${eur(m.decChq)}<br>Laissé en caisse : ${eur(m.resteCaisse)}${m.fondManque && Object.keys(m.fondManque).length ? ` · <span style="color:var(--warn)">monnaie manquante : ${DENOMS.filter((d) => m.fondManque[d]).map((d) => m.fondManque[d] + "×" + dLabel(d)).join(", ")}</span>` : ""}<br>Au coffre : ${DENOMS.filter((d) => (m.depot || {})[d]).map((d) => m.depot[d] + "×" + dLabel(d)).join(", ") || "rien"}${m.complementEsp ? `<br>Pris dans le coffre pour compléter le fond : ${DENOMS.filter((d) => (m.complement || {})[d]).map((d) => m.complement[d] + "×" + dLabel(d)).join(", ")} (${eur(m.complementEsp)})` : ""}` +
+      (m.tpe ? `<br>TPE : ${m.tpe.map((t) => esc(t.nom) + " " + eur(t.montant)).join(" · ")} · DECIPLUS CB : ${eur(m.decCb)}` : "") +
+      ((m.cheques || []).length ? `<br>Chèques : ${m.cheques.map((c) => esc(c.emetteur || "?") + " n°" + esc(c.numero || "?") + " " + eur(c.montant)).join(" ; ")}` : "");
+  }
+  if (m.type === "sortie") {
+    titre = (m.nature === "remboursement" ? "Remboursement · " + esc(m.beneficiaire) : esc(m.fournisseur)); mt = "−" + eur(m.montant);
+    pills = `<span class="pill">${esc(m.pole)}</span><span class="pill">${esc(m.siteConcerne)}</span>`;
+    det = `Objet : ${esc(m.fournisseur)}<br>Facture n° ${esc(m.numFacture)} du ${frDate(m.dateFacture)}<br>Sortie le ${frDate(m.date)}` + (m.photo ? `<img class="photo" src="${m.photo}">` : "");
+  }
+  if (m.type === "levee") {
+    titre = "Levée " + frDate(m.date); mt = "−" + eur(m.leveEsp) + (m.leveChq ? " · chq " + eur(m.leveChq) : "");
+    if (m.ecartEsp || m.ecartChq) pills = `<span class="pill bad">Écart coffre ${eur(m.ecartEsp)}${m.ecartChq ? " / chq " + eur(m.ecartChq) : ""}</span>`; else pills = `<span class="pill ok">Coffre juste</span>`;
+    det = `Théorique : ${eur(m.theoEsp)} / chq ${eur(m.theoChq)}<br>Constaté : ${eur(m.constateEsp)} / chq ${eur(m.constateChq)}`;
+  }
+  if (m.type === "ajustement") { titre = "Ajustement"; mt = (m.deltaEsp >= 0 ? "+" : "") + eur(m.deltaEsp) + (m.deltaChq ? " · chq " + eur(m.deltaChq) : ""); }
+  if (m.commentaire) det += `<br><i>« ${esc(m.commentaire)} »</i>`;
+  const mods = Object.values(m.modifs || {}).sort((a, b) => a.ts - b.ts);
+  if (mods.length) { pills += `<span class="pill warn">Modifié</span>`; det += mods.map((x) => `<br><span style="color:var(--warn)">Modifié par ${esc(x.par)} le ${frTs(x.ts)} : ${esc(x.motif)}<br>${Object.entries(x.avant).map(([k, v]) => `${esc(fieldLabel(m.type, k))} : ${fmtField(m.type, k, v)} → ${fmtField(m.type, k, x.apres[k])}`).join(" · ")}</span>`).join(""); }
+  if (m.annule) det += `<br><b>Annulé par ${esc(m.annule.par)} le ${frTs(m.annule.ts)} : ${esc(m.annule.motif)}</b>`;
+  else if (isResp()) det += `<div class="row" style="margin-top:10px;justify-content:flex-start;gap:8px"><button class="btn sm" style="flex:0 0 auto" onclick="event.stopPropagation();editMvtId='${m.id}';render()">Modifier les chiffres</button><button class="btn sm red" style="flex:0 0 auto" onclick="event.stopPropagation();annuler('${m.id}')">Annuler</button></div>`;
+  return `<div class="item ${m.annule ? "annule" : ""}" onclick="this.classList.toggle('open')"><div class="h"><span>${titre}</span><span>${mt}</span></div>
+  <div class="mute">${esc(m.site)} · ${TYPES[m.type]} · ${esc(m.userNom)} · ${frTs(m.ts)}</div><div>${pills}</div><div class="d">${det}</div></div>`;
+}
+function histFiltered() {
+  if (!isResp()) { const lim = Date.now() - 7 * 864e5; return mvts((m) => m.site === session.site && m.ts > lim && (m.type === "depot" || m.type === "sortie")); }
+  return mvts((m) => (!histF.site || m.site === histF.site) && (!histF.type || m.type === histF.type) && (!histF.mois || (m.date || "").slice(0, 7) === histF.mois));
+}
+function histoView() {
+  const list = histFiltered();
+  if (!isResp()) return `<div class="card"><h2>Saisies de la salle</h2><p class="mute">Clôtures et sorties de ${esc(session.site)} des 7 derniers jours.</p>${list.length ? list.map(mvtLine).join("") : `<p class="mute">Aucune saisie.</p>`}</div>`;
+  return `<div class="card"><h2>Historique</h2>
+  <div class="row"><select onchange="histF.site=this.value;render()"><option value="">Toutes salles</option>${SITES.map((s) => `<option ${histF.site === s ? "selected" : ""}>${s}</option>`).join("")}</select>
+  <select onchange="histF.type=this.value;render()"><option value="">Tous types</option>${Object.entries(TYPES).map(([k, v]) => `<option value="${k}" ${histF.type === k ? "selected" : ""}>${v}</option>`).join("")}</select></div>
+  <label>Mois</label><input type="month" value="${histF.mois}" onchange="histF.mois=this.value;render()">
+  ${isResp() ? `<button class="btn sm sec" style="margin-top:10px" onclick="exportCSV()">Exporter en CSV</button>` : ""}
+  <div style="margin-top:10px">${list.length ? list.map(mvtLine).join("") : `<p class="mute">Aucun mouvement.</p>`}</div></div>`;
+}
+function annuler(id) {
+  const motif = window.prompt("Motif de l'annulation :");
+  if (!motif) return;
+  Store.set("mouvements/" + id + "/annule", { par: meNom(), ts: Date.now(), motif });
+}
+function exportCSV() {
+  const rows = [["Date", "Salle", "Type", "Saisi par", "Espèces", "Chèques", "Écart espèces", "Écart chèques", "TPE", "DECIPLUS CB", "Écart CB", "Fournisseur/objet", "Bénéficiaire", "N° facture", "Date facture", "Site concerné", "Pôle", "Commentaire", "Annulé"]];
+  histFiltered().forEach((m) => {
+    let e = 0, c = 0;
+    if (m.type === "depot") { e = m.depotEsp; c = m.totalChq; }
+    if (m.type === "sortie") e = -m.montant;
+    if (m.type === "levee") { e = -m.leveEsp; c = -m.leveChq; }
+    if (m.type === "ajustement") { e = m.deltaEsp; c = m.deltaChq; }
+    rows.push([m.date, m.site, TYPES[m.type], m.userNom, (e || 0) / 100, (c || 0) / 100, (m.ecartEsp || 0) / 100, (m.ecartChq || 0) / 100, (m.totalTpe || 0) / 100, (m.decCb || 0) / 100, (m.ecartCb || 0) / 100, m.fournisseur || "", m.beneficiaire || "", m.numFacture || "", m.dateFacture || "", m.siteConcerne || "", m.pole || "", m.commentaire || "", m.annule ? "oui" : ""]);
+  });
+  const csv = rows.map((r) => r.map((v) => "\"" + String(v).replace(/"/g, "\"\"").replace(/\./g, typeof v === "number" ? "," : ".") + "\"").join(";")).join("\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv" }));
+  a.download = "caisse_" + (histF.mois || "tout") + ".csv"; a.click();
+}
+
+/* ---- Tableau des coffres ---- */
+function tableauView() {
+  const seg = `<div class="seg"><button class="${suiviTab === "coffres" ? "on" : ""}" onclick="suiviTab='coffres';render()">Coffres</button><button class="${suiviTab === "tpe" ? "on" : ""}" onclick="suiviTab='tpe';render()">TPE / DECIPLUS</button></div>`;
+  return seg + (suiviTab === "tpe" ? tpeView() : coffresView());
+}
+function tpeView() {
+  const list = mvts((m) => m.type === "depot" && !m.annule && (m.date || "").slice(0, 7) === tpeF.mois && (!tpeF.site || m.site === tpeF.site)).sort((a, b) => a.date < b.date ? 1 : -1);
+  const tol = S.config.tolerance || 0;
+  let tTpe = 0, tDec = 0, nE = 0;
+  list.forEach((m) => { tTpe += m.totalTpe || 0; tDec += m.decCb || 0; if (m.ecartCb) nE++; });
+  const parSite = SITES.map((s) => { const l = list.filter((m) => m.site === s); return [s, l.reduce((a, m) => a + (m.totalTpe || 0), 0), l.reduce((a, m) => a + (m.decCb || 0), 0)]; });
+  return `<div class="card"><h2>Rapprochement TPE ↔ DECIPLUS</h2>
+  <div class="row"><select onchange="tpeF.site=this.value;render()"><option value="">Toutes salles</option>${SITES.map((s) => `<option ${tpeF.site === s ? "selected" : ""}>${s}</option>`).join("")}</select><input type="month" value="${tpeF.mois}" onchange="tpeF.mois=this.value;render()"></div>
+  <div class="kpi" style="margin-top:12px"><div><div class="mute">Total TPE</div><div class="big">${eur(tTpe)}</div></div><div><div class="mute">Total DECIPLUS CB</div><div class="big">${eur(tDec)}</div></div></div>
+  ${ecartBloc("Écart du mois", tTpe - tDec, tol)}
+  <p class="mute">${list.length} clôture(s) · ${nE} jour(s) avec écart</p>
+  ${!tpeF.site ? `<table class="grid"><tr><th>Salle</th><th>TPE</th><th>DECIPLUS</th><th>Écart</th></tr>${parSite.map(([s, a, b]) => `<tr><td>${s}</td><td>${eur(a)}</td><td>${eur(b)}</td><td style="color:${a - b ? "var(--bad)" : "var(--ok)"}">${eur(a - b)}</td></tr>`).join("")}</table>` : ""}</div>
+  <div class="card"><h2>Détail par jour</h2>${list.length ? `<table class="grid"><tr><th>Jour</th><th>TPE</th><th>DECIPLUS</th><th>Écart</th></tr>${list.map((m) => `<tr><td>${frDate(m.date).slice(0, 5)} <span class="mute">${m.site}</span></td><td>${eur(m.totalTpe)}</td><td>${eur(m.decCb)}</td><td style="color:${!m.ecartCb ? "var(--ok)" : Math.abs(m.ecartCb) > tol ? "var(--bad)" : "var(--warn)"}">${m.ecartCb ? eur(m.ecartCb) : "✓"}</td></tr>`).join("")}</table>` : `<p class="mute">Aucune clôture ce mois-ci.</p>`}
+  <p class="mute" style="margin-top:10px">Astuce : le total TPE du mois doit aussi se retrouver sur le relevé bancaire (moins les commissions).</p></div>`;
+}
+function coffresView() {
+  const mois = today().slice(0, 7);
+  const cards = SITES.map((s) => {
+    const so = solde(s);
+    const lastDep = mvts((m) => m.site === s && m.type === "depot" && !m.annule)[0];
+    const lastLev = mvts((m) => m.site === s && m.type === "levee" && !m.annule)[0];
+    return `<div class="card"><h2>${s} · ${SITE_NOMS[s]}</h2><div class="kpi"><div><div class="mute">Espèces au coffre</div><div class="big">${eur(so.esp)}</div></div><div><div class="mute">Chèques au coffre</div><div class="big">${eur(so.chq)}</div></div></div>
+    <p class="mute">Dernière clôture : ${lastDep ? frDate(lastDep.date) + " (" + esc(lastDep.userNom) + ")" + (lastDep.ecartEsp ? " · écart " + eur(lastDep.ecartEsp) : " · juste") : "aucune"}<br>Dernière levée : ${lastLev ? frDate(lastLev.date) + " (" + esc(lastLev.userNom) + ")" : "aucune"}</p>
+    ${lastDep && lastDep.fondManque && Object.keys(lastDep.fondManque).length ? `<div class="alert warn">Monnaie à prévoir pour le fond<small>${DENOMS.filter((d) => lastDep.fondManque[d]).map((d) => lastDep.fondManque[d] + " × " + dLabel(d)).join(" · ")}</small></div>` : (lastDep && lastDep.resteCaisse != null && lastDep.resteCaisse !== lastDep.fond ? `<div class="alert warn">Fond laissé : ${eur(lastDep.resteCaisse)} au lieu de ${eur(lastDep.fond)}</div>` : "")}</div>`;
+  }).join("");
+  const ecarts = mvts((m) => !m.annule && (m.ecartEsp || m.ecartChq || m.ecartCb)).slice(0, 15);
+  const sorties = mvts((m) => m.type === "sortie" && !m.annule && (m.date || "").slice(0, 7) === mois);
+  const parPole = {}; sorties.forEach((m) => { const k = (m.pole || "?") + " · " + m.siteConcerne; parPole[k] = (parPole[k] || 0) + m.montant; });
+  return `<div class="cols3">${cards}</div>` + `<div class="card"><h2>Écarts récents</h2>${ecarts.length ? ecarts.map(mvtLine).join("") : `<p class="mute">Aucun écart.</p>`}</div>
+  <div class="card"><h2>Sorties du mois par pôle</h2>${Object.keys(parPole).length ? `<table class="grid">${Object.entries(parPole).sort().map(([k, v]) => `<tr><td>${esc(k)}</td><td>${eur(v)}</td></tr>`).join("")}</table>` : `<p class="mute">Aucune sortie ce mois-ci.</p>`}</div>`;
+}
+
+/* ---- Réglages ---- */
+let fondSite = "BE1", editUser = null;
+/* Un responsable gère les employés ; seul l'admin gère responsables et admins */
+const canEditUser = () => isAdmin();
+function reglagesView() {
+  const fonds = Object.entries(S.config.fonds[fondSite] || {}).sort((a, b) => a[1].debut < b[1].debut ? 1 : -1);
+  const actuel = getFond(fondSite, today());
+  const users = Object.entries(S.config.users).sort((a, b) => (a[1].prenom || "").localeCompare(b[1].prenom || ""));
+  const eu = editUser ? (S.config.users[editUser] || { prenom: "", nom: "", pin: "", role: "responsable" }) : null;
+  const euRole = eu ? roleOf(eu) : "";
+  return `<div class="card"><h2>Salle</h2>
+  <div class="sites">${SITES.map((s) => `<button class="${fondSite === s ? "on" : ""}" onclick="fondSite='${s}';render()">${s}</button>`).join("")}</div>
+  <h3>Fond de caisse ${fondSite}</h3>
+  <p>En vigueur aujourd'hui : <b style="color:var(--accent)">${eur(actuel.montant)}</b> ${actuel.debut ? "<span class='mute'>(depuis le " + frDate(actuel.debut) + ")</span>" : ""}</p>
+  ${fonds.map(([id, f]) => `<div class="item"><div class="h"><span>À partir du ${frDate(f.debut)}</span><span>${eur(sumCompo(f.compo))}</span></div><div class="mute">${DENOMS.filter((d) => f.compo[d]).map((d) => f.compo[d] + "×" + dLabel(d)).join(", ")}</div>${fonds.length > 1 ? `<button class="btn sm sec" style="margin-top:6px" onclick="delFond('${id}')">Supprimer</button>` : ""}</div>`).join("")}
+  <h3>Nouveau fond / nouvelle période</h3><label>À partir du</label><input id="fnd_debut" type="date" value="${today()}">
+  <p class="mute">Composition voulue : les employés laisseront ces pièces et billets dans le tiroir.</p>
+  ${countGrid("fnd", actuel.compo)}
+  <div class="chk"><input type="checkbox" id="fnd_all"> Appliquer ce fond aux 3 salles</div>
+  <button class="btn" onclick="saveFond()">Enregistrer ce fond</button>
+  <button class="btn sec" onclick="printFond('${fondSite}')">🖨 Imprimer la fiche fond de caisse ${fondSite}</button>
+  <h3>Terminaux de paiement (TPE) ${fondSite}</h3>
+  ${tpeList(fondSite).map(([id, nom, mod]) => `<div class="row" style="margin-bottom:8px"><input value="${esc(nom)}" onchange="setTpe('${id}','nom',this.value)"><select onchange="setTpe('${id}','modele',this.value)"><option value="">— Modèle —</option>${Object.entries(S.config.tpeModeles || {}).map(([k, m]) => `<option value="${k}" ${k === mod ? "selected" : ""}>${esc(m.nom)}</option>`).join("")}</select><button class="btn sm sec" style="flex:0 0 auto" onclick="delTpe('${id}')">✕</button></div>`).join("") || `<p class="mute">Aucun TPE.</p>`}
+  <div class="row" style="margin-top:10px"><input id="newTpe" placeholder="Nom du TPE, ex. TPE restaurant"><select id="newTpeMod">${Object.entries(S.config.tpeModeles || {}).map(([k, m]) => `<option value="${k}">${esc(m.nom)}</option>`).join("")}</select><button class="btn sm" style="flex:0 0 auto" onclick="addTpe()">Ajouter</button></div></div>
+
+  <div class="card"><h2>Démarche DECIPLUS</h2><p class="mute">Affichée à l'étape 4 de la clôture. Une étape par ligne.</p>
+  <textarea id="dpGuide" style="min-height:140px">${esc(S.config.deciplusGuide || "")}</textarea>
+  <div class="row" style="margin-top:10px;justify-content:flex-start;gap:8px"><button class="btn sm" style="flex:0 0 auto" onclick="Store.set('config/deciplusGuide',$('dpGuide').value.trim()).then(()=>toast('Démarche enregistrée'))">Enregistrer</button><button class="btn sm sec" style="flex:0 0 auto" onclick="$('dpGuide').value=DECIPLUS_GUIDE_DEFAUT">Texte par défaut</button></div></div>
+
+  <div class="card"><h2>Démarche pour relever le montant CB</h2><p class="mute">Une démarche par modèle de TPE, affichée à l'employé sur la carte de chaque TPE pendant la clôture. Une étape par ligne.</p>
+  ${Object.entries(S.config.tpeModeles || {}).map(([k, m]) => `<div class="sub"><label>Modèle</label><input id="tm_nom_${k}" value="${esc(m.nom)}"><label>Étapes</label><textarea id="tm_et_${k}" style="min-height:120px">${esc(m.etapes || "")}</textarea>
+  <div class="row" style="margin-top:10px;justify-content:flex-start;gap:8px"><button class="btn sm" style="flex:0 0 auto" onclick="saveModele('${k}')">Enregistrer</button>${TPE_MODELES_DEFAUT[k] ? `<button class="btn sm sec" style="flex:0 0 auto" onclick="$('tm_et_${k}').value=TPE_MODELES_DEFAUT['${k}'].etapes">Texte par défaut</button>` : ""}</div></div>`).join("")}</div>
+
+  <div class="card"><h2>Tolérance d'écart</h2><p class="mute">Au-delà, l'écart s'affiche en rouge et un commentaire est obligatoire.</p>
+  <div class="row"><input id="tol" inputmode="decimal" value="${(S.config.tolerance / 100).toFixed(2).replace(".", ",")}"><button class="btn sm" onclick="Store.set('config/tolerance',parseEur($('tol').value));toast('Enregistré')">OK</button></div></div>
+
+  <div class="card"><h2>Pôles</h2>${S.config.poles.map((p, i) => `<span class="pill" style="font-size:14px;padding:6px 10px">${esc(p)} <a onclick="delPole(${i})" style="cursor:pointer;margin-left:4px">✕</a></span>`).join("")}
+  <div class="row" style="margin-top:10px"><input id="newPole" placeholder="Nouveau pôle"><button class="btn sm" onclick="addPole()">Ajouter</button></div></div>
+
+  ${isAdmin() ? `<div class="card"><h2>Codes des salles</h2><p class="mute">Code à taper sur l'iPad / l'ordinateur de la salle pour ouvrir la caisse.</p>
+  <div class="row">${SITES.map((x) => `<div><label>${x}</label><input id="cs_${x}" inputmode="numeric" maxlength="4" value="${esc(S.config.codesSalle[x] || "")}"></div>`).join("")}</div>
+  <button class="btn" onclick="saveCodesSalle()">Enregistrer les codes</button></div>
+
+  <div class="card"><h2>Responsables (codes personnels)</h2><p class="mute">Seules ces personnes ont un code. Les employés tapent simplement leur nom.</p>
+  ${users.map(([id, u]) => `<div class="item"><div class="h"><span>${esc(u.prenom)} ${esc(u.nom)}</span><button class="btn sm sec" onclick="editUser='${id}';render()">Modifier</button></div><div><span class="pill acc">${ROLES[roleOf(u)]}</span></div></div>`).join("")}
+  <button class="btn sec" onclick="editUser='new';render()">+ Ajouter un responsable</button></div>` : ""}
+  ${eu ? `<div class="modal" onclick="if(event.target===this){editUser=null;render()}"><div class="card"><h2>${editUser === "new" ? "Nouveau responsable" : "Modifier"}</h2>
+    <div class="row"><div><label>Prénom</label><input id="u_pre" value="${esc(eu.prenom)}"></div><div><label>Nom</label><input id="u_nom" value="${esc(eu.nom)}"></div></div>
+    <label>Code personnel (4 chiffres, unique)</label><input id="u_pin" inputmode="numeric" maxlength="4" value="${esc(eu.pin)}">
+    <label>Rôle</label><select id="u_role">${["responsable", "admin"].map((k) => `<option value="${k}" ${euRole === k ? "selected" : ""}>${ROLES[k]}</option>`).join("")}</select>
+    <p class="mute"><b>Responsable</b> : levées, suivi des coffres et TPE, historique complet, modification et annulation des saisies, réglages des salles.<br><b>Administrateur</b> : tout, plus les codes des salles, les responsables et les ajustements de coffre.</p>
+    <button class="btn" onclick="saveUser()">Enregistrer</button>
+    ${editUser !== "new" && editUser !== session.uid ? `<button class="btn red" onclick="delUser()">Supprimer</button>` : ""}
+    <button class="btn sec" onclick="editUser=null;render()">Fermer</button></div></div>` : ""}
+
+  ${isAdmin() ? `<div class="card"><h2>Ajustement manuel d'un coffre</h2><p class="mute">Ex. apport de monnaie achetée à la banque, correction d'erreur. Toujours tracé.</p>
+  <label>Salle</label><select id="aj_site">${SITES.map((s) => `<option>${s}</option>`).join("")}</select>
+  <div class="row"><div><label>Espèces (+/−)</label><input id="aj_esp" inputmode="decimal" placeholder="ex. 50 ou -20"></div><div><label>Chèques (+/−)</label><input id="aj_chq" inputmode="decimal" placeholder="0"></div></div>
+  <label>Motif</label><input id="aj_mot">
+  <button class="btn" onclick="saveAjust()">Enregistrer l'ajustement</button></div>
+
+  <div class="card"><h2>Données</h2><p class="mute">Stockage : ${Store.mode === "firebase" ? "Firebase (partagé)" : "local (cet appareil)"}</p>
+  <button class="btn sec" onclick="backup()">Télécharger une sauvegarde (JSON)</button></div>` : ""}`;
+}
+function saveFond() {
+  const compo = readGrid("fnd"), debut = $("fnd_debut").value;
+  if (!debut || sumCompo(compo) === 0) { toast("Date et composition obligatoires"); return; }
+  const sites = $("fnd_all").checked ? SITES : [fondSite];
+  Promise.all(sites.map((x) => Store.set("config/fonds/" + x + "/" + newId(), { debut, compo }))).then(() => toast("Fond enregistré pour " + sites.join(", ")));
+}
+function printFond(site) {
+  const f = getFond(site, today());
+  const rows = DENOMS.filter((d) => f.compo[d]).sort((a, b) => a - b).map((d) => `<tr><td>${f.compo[d]} × ${dLabel(d)}</td><td>${eur(f.compo[d] * d)}</td><td class="c"></td></tr>`).join("");
+  const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Fond de caisse ${site}</title><style>body{font-family:-apple-system,Segoe UI,sans-serif;padding:30px;color:#111}h1{font-size:22px;margin:0}p{color:#555;margin:4px 0 18px}table{border-collapse:collapse;width:100%;font-size:22px}td{border-bottom:1px solid #ccc;padding:12px 6px}td:nth-child(2){text-align:right}td.c{width:60px;border:2px solid #111;border-width:0 0 1px 0}.tot td{font-weight:700;border-top:2px solid #111;border-bottom:0}small{color:#777}</style></head><body>
+  <h1>Basalte Évolution · Fond de caisse ${site} ${SITE_NOMS[site]}</h1><p>En vigueur depuis le ${frDate(f.debut)} · à laisser dans le tiroir chaque soir</p>
+  <table>${rows}<tr class="tot"><td>Total</td><td>${eur(f.montant)}</td><td></td></tr></table><p><small>Colonne de droite : cocher en vérifiant.</small></p></body></html>`;
+  const w = window.open("", "_blank"); if (!w) { toast("Autorise les fenêtres pour imprimer"); return; }
+  w.document.write(html); w.document.close(); setTimeout(() => w.print(), 300);
+}
+function delFond(id) { if (window.confirm("Supprimer cette période de fond ?")) Store.set("config/fonds/" + fondSite + "/" + id, null); }
+function addTpe() { const v = $("newTpe").value.trim(); if (!v) { toast("Donne un nom au TPE"); return; } Store.set("config/tpe/" + fondSite + "/" + newId(), { nom: v, modele: $("newTpeMod").value }); }
+function setTpe(id, k, v) {
+  const cur = S.config.tpe[fondSite][id]; const o = typeof cur === "string" ? { nom: cur, modele: "" } : Object.assign({}, cur);
+  o[k] = String(v).trim(); if (k === "nom" && !o.nom) { toast("Nom obligatoire"); render(); return; }
+  Store.set("config/tpe/" + fondSite + "/" + id, o).then(() => toast("TPE mis à jour"));
+}
+function saveModele(k) { Store.set("config/tpeModeles/" + k, { nom: $("tm_nom_" + k).value.trim() || k, etapes: $("tm_et_" + k).value.trim() }).then(() => toast("Démarche enregistrée")); }
+function delTpe(id) { if (window.confirm("Retirer ce TPE ?")) Store.set("config/tpe/" + fondSite + "/" + id, null); }
+function addPole() { const v = $("newPole").value.trim(); if (!v) return; Store.set("config/poles", S.config.poles.concat([v])); }
+function delPole(i) { const p = S.config.poles.slice(); p.splice(i, 1); Store.set("config/poles", p); }
+function codeLibre(code, saufUser) {
+  if (SITES.some((x) => S.config.codesSalle[x] === code)) return false;
+  return !Object.entries(S.config.users).some(([id, u]) => u.pin === code && id !== saufUser);
+}
+function saveCodesSalle() {
+  if (!isAdmin()) return;
+  const c = {}; for (const x of SITES) { c[x] = $("cs_" + x).value.trim(); if (!/^\d{4}$/.test(c[x])) { toast("Code " + x + " : 4 chiffres"); return; } }
+  if (new Set(Object.values(c)).size !== 3) { toast("Les 3 codes doivent être différents"); return; }
+  if (Object.values(S.config.users).some((u) => Object.values(c).includes(u.pin))) { toast("Un code de salle est identique au code d'un responsable"); return; }
+  Store.set("config/codesSalle", c).then(() => toast("Codes enregistrés"));
+}
+function saveUser() {
+  if (!isAdmin()) return;
+  const pin = $("u_pin").value.trim(), pre = $("u_pre").value.trim(), role = $("u_role").value;
+  if (!/^\d{4}$/.test(pin)) { toast("Le code doit faire 4 chiffres"); return; }
+  if (!pre) { toast("Prénom obligatoire"); return; }
+  if (!codeLibre(pin, editUser)) { toast("Ce code est déjà utilisé (responsable ou salle)"); return; }
+  if (editUser === session.uid && role !== roleOf(me())) { toast("Tu ne peux pas changer ton propre rôle"); return; }
+  const id = editUser === "new" ? newId() : editUser;
+  Store.set("config/users/" + id, { prenom: pre, nom: $("u_nom").value.trim(), pin, role }).then(() => { editUser = null; toast("Responsable enregistré"); render(); });
+}
+function delUser() { if (window.confirm("Supprimer cet utilisateur ?")) { const id = editUser; editUser = null; Store.set("config/users/" + id, null); } }
+function saveAjust() {
+  if (!isAdmin()) return;
+  const de = parseEur($("aj_esp").value), dc = parseEur($("aj_chq").value), mot = $("aj_mot").value.trim();
+  if (!de && !dc) { toast("Montant vide"); return; }
+  if (!mot) { toast("Motif obligatoire"); return; }
+  Store.set("mouvements/" + newId(), { type: "ajustement", site: $("aj_site").value, date: today(), ts: Date.now(), uid: session.uid, userNom: meNom(), deltaEsp: de, deltaChq: dc, commentaire: mot }).then(() => toast("Ajustement enregistré"));
+}
+function backup() {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify({ config: S.config, mouvements: S.mouvements }, null, 1)], { type: "application/json" }));
+  a.download = "sauvegarde_caisse_" + today() + ".json"; a.click();
+}
+
+/* Appareil partagé : le mode responsable se ferme après 5 min sans activité ; la salle reste ouverte */
+const INACTIVITE_MIN = 5;
+let lastAct = Date.now();
+["pointerdown", "keydown", "input", "scroll"].forEach((ev) => document.addEventListener(ev, () => { lastAct = Date.now(); }, { passive: true, capture: true }));
+setInterval(() => { if (session.uid && Date.now() - lastAct > INACTIVITE_MIN * 60000) { finResp(); toast("Mode responsable fermé après " + INACTIVITE_MIN + " min d'inactivité"); } }, 15000);
+
+Store.init(render);
+</script>
+</body>
+</html>
